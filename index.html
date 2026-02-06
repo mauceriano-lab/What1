@@ -31,7 +31,7 @@
 
     <style>
         :root {
-            /* Valores por defecto hasta que cargue el CSV */
+            /* Valores por defecto */
             --color-brand-light: #94a3b8;
             --color-brand-main: #475569;
             --color-brand-dark: #1e293b;
@@ -98,7 +98,7 @@
         <div class="relative">
             <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-slate-900 mb-4"></div>
         </div>
-        <p class="text-slate-500 text-xs tracking-[0.2em] uppercase font-bold mt-4 animate-pulse">Leyendo catálogo...</p>
+        <p class="text-slate-500 text-xs tracking-[0.2em] uppercase font-bold mt-4 animate-pulse">Cargando catálogo...</p>
     </div>
 
     <!-- Toast -->
@@ -228,6 +228,10 @@
         
         const CSV_LOCAL_FILE = "./datos_tienda.csv";
         
+        // 🛠️ ¿PROBLEMAS CON TILDES?
+        // Si usas Excel normal y se ven mal los acentos, cambia "UTF-8" por "ISO-8859-1"
+        const CSV_ENCODING = "UTF-8"; 
+        
         // =========================================================================
 
         let CONFIG = {
@@ -238,7 +242,6 @@
         let CART = {};
         let currentCategory = 'all';
 
-        // 💰 Función que da el formato "$ 1,200.00 MXN"
         function formatPrice(amount) {
             const numberString = amount.toLocaleString('en-US', {
                 minimumFractionDigits: 2, 
@@ -263,6 +266,7 @@
         async function initApp() {
             Papa.parse(CSV_LOCAL_FILE, {
                 download: true,
+                encoding: CSV_ENCODING, // Usamos la configuración de codificación
                 header: true,
                 skipEmptyLines: true,
                 complete: function(results) {
@@ -300,7 +304,6 @@
             const configRow = rows[0];
             
             if(configRow) {
-                // Mapeo de columnas CSV a variables internas
                 CONFIG.storeName = configRow.Tienda_Nombre || "Servicios";
                 CONFIG.desc = configRow.Tienda_Descripcion || "Catálogo online";
                 CONFIG.phone = configRow.Tienda_Telefono || "";
@@ -323,7 +326,6 @@
                         category: row.Prod_Categoria || "General",
                         name: row.Prod_Nombre,
                         desc: row.Prod_Descripcion || "",
-                        // Convertimos el precio a número flotante para evitar errores
                         price: parseFloat(row.Prod_Precio) || 0, 
                         variants: row.Prod_Variantes ? row.Prod_Variantes.split(',').map(v => v.trim()) : [],
                         image: row.Prod_Imagen || ''
